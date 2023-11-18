@@ -126,6 +126,7 @@ static int channel_open(ssh_channel channel, const char *type, uint32_t window,
 
             default:
                 // LAB: insert your code here.
+                break;
 
         }
     }
@@ -524,6 +525,7 @@ int ssh_channel_read(ssh_channel channel, void *dest, uint32_t count) {
 
                 default:
                     // LAB: insert your code here.
+                    break;
 
             }
         }

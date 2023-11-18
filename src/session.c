@@ -194,10 +194,47 @@ int receive_id_str(ssh_session session) {
      */
 
     /* according to RFC 4253 the max banner length is 255 */
+
+    bool last_line = false;
     for (int i = 0; i < 256; ++i) {
         ssh_socket_read(session->socket, &buffer[i], 1);
         // LAB: insert your code here.
+        // LAB-PT1
 
+        if (!last_line) {
+            if (i >= 3 && strncmp(&buffer[i-3], "SSH-", 4) == 0) {
+                // make sure it's beginning of a line
+                if (i == 3 || 
+                    (i >= 5 && buffer[i - 5] == '\r' || buffer[i - 4] == '\n')) {
+                    last_line = true;
+                } else 
+                    continue;
+            }
+        } else {
+            if (buffer[i - 1] == '\r' && buffer[i] == '\n') {
+                // print the banner
+                buffer[i + 1] = '\0';
+                LOG_NOTICE("server banner:\n %s", buffer);
+
+                // get the beginning of the id str
+
+                char *ptr = NULL;
+                for (int j = i - 2; j >= 0; j--) {
+                    if (buffer[j] == '\r') {
+                        ptr = &buffer[j + 1];
+                        break;
+                    }
+                }
+                if (ptr == NULL)
+                    ptr = buffer;
+                buffer[i - 1] = '\0';
+                session->server_id_str = strdup(ptr);
+
+                // printf("server id str: %s\n", session->server_id_str);`
+
+                return SSH_OK;
+            }
+        }
     }
     /* this line should not be reached */
     return SSH_ERROR;

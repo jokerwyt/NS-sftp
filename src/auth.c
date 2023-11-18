@@ -77,7 +77,7 @@ void ssh_get_password(char *password) {
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
     /*reading the password from the console*/
-    while ((c = getchar()) != '\n' && c != EOF && i < max_len) {
+    while ((c = getchar()) != '\n' && c != (uint8_t) EOF && i < max_len) {
         password[i++] = c;
     }
     password[i] = '\0';
@@ -97,7 +97,7 @@ void ssh_get_password(char *password) {
 int ssh_userauth_password(ssh_session session, const char *password) {
     int rc;
     uint8_t type;
-    static int cnt = 0;
+    static int cnt = 0; (void)cnt;
 
     rc = ssh_buffer_pack(session->out_buffer, "bsssbs",
                          SSH_MSG_USERAUTH_REQUEST, session->opts.username,
@@ -116,6 +116,7 @@ int ssh_userauth_password(ssh_session session, const char *password) {
      *
      */
 
+    ssh_string msg = NULL;
     while (rc != SSH_ERROR) {
         rc = ssh_packet_receive(session);
         if (rc != SSH_OK) goto error;
@@ -123,17 +124,32 @@ int ssh_userauth_password(ssh_session session, const char *password) {
         switch (type) {
             case SSH_MSG_USERAUTH_BANNER:
                 // LAB: insert your code here.
+                // LAB-PT4
+                msg = ssh_buffer_get_ssh_string(session->in_buffer);
+                LOG_INFO("Server auth banner msg: %s",
+                          ssh_string_to_char(msg));
+                break;
 
             case SSH_MSG_USERAUTH_SUCCESS:
                 // LAB: insert your code here.
+                // LAB-PT4
+                LOG_INFO("Authentication success!");
+                return SSH_OK;
 
             case SSH_MSG_USERAUTH_PASSWD_CHANGEREQ:
             case SSH_MSG_USERAUTH_FAILURE:
                 // LAB: insert your code here.
+                // LAB-PT4
+                msg = ssh_buffer_get_ssh_string(session->in_buffer);
+                LOG_ERROR("Authentication failed. msg: %s",
+                          ssh_string_to_char(msg));
+                goto error;
 
             default:
                 // LAB: insert your code here.
-
+                // LAB-PT4
+                LOG_WARNING("unexpected authentication packet type: %d. Continue to listen...", type);
+                break;
         }
     }
 

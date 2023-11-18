@@ -255,7 +255,7 @@ sftp_file sftp_open(sftp_session sftp, const char *filename, int flags,
 
         default:
             // LAB: insert your code here.
-
+            break;
     }
     return NULL;
 }

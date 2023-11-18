@@ -185,7 +185,18 @@ int ssh_receive_kex(ssh_session session) {
     for (int i = 0; i < SSH_KEX_METHODS; i++) {
         /* parse name-lists, don't forget to add `in_hashbuf` */
         // LAB: insert your code here.
+        // LAB-PT2
+        str = ssh_buffer_get_ssh_string(session->in_buffer);
+        if (str == NULL) goto error;
+        strings[i] = ssh_string_to_char(str);
 
+        if (strings[i] == NULL) goto error;
+
+        if (ssh_buffer_add_ssh_string(session->in_hashbuf, str) < 0) {
+            goto error;
+        }
+
+        ssh_string_free(str);
     }
 
     rc = ssh_buffer_unpack(session->in_buffer, "bd", &first_kex_follows,
@@ -227,10 +238,49 @@ int ssh_select_kex(ssh_session session) {
     struct ssh_kex_struct *server = &session->next_crypto->server_kex;
     struct ssh_kex_struct *client = &session->next_crypto->client_kex;
 
+    LOG_NOTICE("selecting an agreed cipher suite...");
     for (int i = 0; i < SSH_KEX_METHODS; ++i) {
         /* select negotiated algorithms and store them in `next_crypto->kex_methods` */
         // LAB: insert your code here.
+        // LAB-PT2
+        // xxx_kex.methods[i] is the server's supported method with the format "method1,method2,..."
 
+        // comapre those method and get the agreed method
+        // store the agreed method in next_crypto->kex_methods[i]
+        // if the agreed method is not found, return SSH_ERROR
+        // if the agreed method is found, return SSH_OK
+
+        char *server_method = server->methods[i];
+        char *client_method = client->methods[i];
+
+        // special case: both empty 
+        if (strlen(server_method) == 0 && strlen(client_method) == 0) {
+            session->next_crypto->kex_methods[i] = strdup("");
+        } else {
+            char *token1, *token2;
+            char *saveptr1, *saveptr2;
+
+            token1 = strtok_r(server_method, ",", &saveptr1);
+            while (token1 != NULL) {
+                token2 = strtok_r(client_method, ",", &saveptr2);
+                while (token2 != NULL) {
+                    if (strcmp(token1, token2) == 0) {
+                        session->next_crypto->kex_methods[i] = strdup(token1);
+                        break;
+                    }
+                    token2 = strtok_r(NULL, ",", &saveptr2);
+                }
+                if (token2 != NULL) break;
+                token1 = strtok_r(NULL, ",", &saveptr1);
+            }
+            if (token1 == NULL) {
+                return SSH_ERROR;
+            }
+        }
+
+        // show the agreed method
+
+        LOG_INFO("method[%d] agreement: %s", i, session->next_crypto->kex_methods[i]);
     }
     session->next_crypto->kex_type = SSH_KEX_DH_GROUP14_SHA256;
     return SSH_OK;
