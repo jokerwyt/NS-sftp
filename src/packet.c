@@ -193,9 +193,9 @@ static int packet_hmac_verify(ssh_session session, const void *data, size_t len,
     hmac_update(ctx, data, len);
     hmac_final(ctx, hmacbuf, &hmaclen);
 
-    // ssh_log_hexdump("received mac", mac, hmaclen);
-    // ssh_log_hexdump("Computed mac", hmacbuf, hmaclen);
-    // ssh_log_hexdump("seq", (unsigned char *)&seq, sizeof(uint32_t));
+    ssh_log_hexdump("received mac", mac, hmaclen);
+    ssh_log_hexdump("Computed mac", hmacbuf, hmaclen);
+    ssh_log_hexdump("seq", (unsigned char *)&seq, sizeof(uint32_t));
 
     if (memcmp(mac, hmacbuf, hmaclen) == 0) {
         return SSH_OK;
@@ -281,7 +281,13 @@ int ssh_packet_receive(ssh_session session) {
         /* verify MAC, see `packet_hmac_verify` */
         // LAB: insert your code here.
 
+        rc = packet_hmac_verify(session, ssh_buffer_get(session->in_buffer), 
+                                ssh_buffer_get_len(session->in_buffer),
+                                mac, crypto->in_hmac);
+        // LOG_INFO("ssh_buffer_get_len(session->in_buffer) = %u", ssh_buffer_get_len(session->in_buffer));
+        // LOG_INFO("packet_len = %u", packet_len);
         if (rc != SSH_OK) {
+            LOG_ERROR("MAC verification failed");
             ssh_set_error(SSH_FATAL, "hmac error");
             goto error;
         }
