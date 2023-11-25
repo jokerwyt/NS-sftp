@@ -28,7 +28,10 @@
 
 
 # CP5
+- open channel
 ![cp5](my_readme.assets/cp5.png)
+- disconnect
+![disconnect](my_readme.assets/disconnect.png)
 
 # CP6
 
