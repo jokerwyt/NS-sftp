@@ -25,3 +25,17 @@
 
 - 错误密码，无法登录
 ![image-20231118115543727](my_readme.assets/image-20231118115543727.png)
+
+
+# CP5
+![cp5](my_readme.assets/cp5.png)
+
+# CP6
+
+- upload
+![upload1](my_readme.assets/upload1.png)
+![upload2](my_readme.assets/upload2.png)
+- download
+![download1](my_readme.assets/download1.png)
+![download2](my_readme.assets/download2.png)
+
